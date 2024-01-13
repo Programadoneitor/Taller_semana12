@@ -1,0 +1,134 @@
+#include <stdio.h>
+#include <string.h>
+
+#define FILAS 100
+#define COLUMNAS 15
+FILE *archivo;
+
+void ingresarDatos(int *cantidad, char productos[][COLUMNAS], float precio[], int cantidadProductos[]);
+void guardarDatos(const int cantidad, char productos[][COLUMNAS], float precio[], int cantidadProductos[]);
+void editarDatos();
+void mostrarDatos(char productos[][COLUMNAS], float precio[], int cantidadProductos[]);
+int menu();
+
+int main (){
+  char productos[FILAS][COLUMNAS];
+  int cantidadProductos[FILAS];
+  float precio[FILAS];
+  printf("Bienvenido al inventario de mercado minorista ´Programando Ando´\n Menu principal \n");
+  if ((archivo = fopen("inventario.txt", "a+")) != NULL){
+    int tamaño;
+    int op;
+    do{
+      op=menu();
+      switch(op){
+        case 1:
+          ingresarDatos(&tamaño, productos, precio, cantidadProductos);
+          guardarDatos(tamaño, productos, precio, cantidadProductos);
+        break;
+        case 2:
+          editarDatos();
+        break;
+        case 3:
+          mostrarDatos(productos, precio, cantidadProductos);
+        break;
+      }
+    }while(op!=4);
+  }else
+    printf( "El archivo no pudo abrirse" );
+
+  fclose (archivo);
+  return 0;
+}
+
+void ingresarDatos(int *cantidad, char productos[][COLUMNAS], float precio[], int cantidadProductos[]){
+  printf("Ingrese el numero de productos\n");
+  int num;
+  scanf("%d", &num);
+  *cantidad = num;
+  for (int i = 0; i < *cantidad; i++){
+    printf("Ingrese el nombre del producto %d: \n", i+1);
+    scanf("%s", productos[i]);
+    printf("Ingrese la cantidad del producto %d: \n", i+1);
+    scanf("%d", &cantidadProductos[i]);
+    printf("Ingrese el precio del producto %d: \n", i+1);
+    scanf("%f", &precio[i]);
+  }
+}
+
+void guardarDatos(const int cantidad, char productos[][COLUMNAS], float precio[], int cantidadProductos[]){
+  if ((archivo = fopen("inventario.txt", "a+")) != NULL){
+    for (int i = 0; i < cantidad; i++){
+      fprintf(archivo, "\n");
+      fputs (productos[i], archivo);
+      fputs (" ", archivo);
+      fprintf(archivo, "%d", cantidadProductos[i]);
+      fputs (" ", archivo);
+      fprintf(archivo, "%.2f", precio[i]);
+      fputs ("\n", archivo); 
+    }
+  }else
+    printf( "El archivo no pudo abrirse" );
+
+  fclose (archivo);
+}
+    
+void editarDatos() {
+  if ((archivo = fopen("inventario.txt", "r+")) != NULL) {
+    char productos[50];
+    int cantidadProductos;
+    float precio;
+    long posicion = 0;
+    printf("Ingrese el nombre del producto que desea editar: \n");
+    char nuevoProducto[50];
+    scanf("%s", nuevoProducto);
+    rewind(archivo);
+    while (fscanf(archivo, "%s %d %f", productos, &cantidadProductos, &precio) != EOF) {
+      posicion = ftell(archivo);
+      if (strcmp(productos, nuevoProducto) == 0) {
+        fseek(archivo, posicion - strlen(productos) - sizeof(int) - sizeof(float), SEEK_SET);
+        printf("Ingrese el nuevo nombre del producto: \n");
+        scanf("%s", productos);
+        printf("Ingrese la nueva cantidad del producto: \n");
+        scanf("%d", &cantidadProductos);
+        printf("Ingrese el nuevo precio del producto: \n");
+        scanf("%f", &precio);
+        fprintf(archivo, "\n%s %d %.2f\n", productos, cantidadProductos, precio);
+        fclose(archivo);
+        return;
+      }
+    }
+    printf("Producto no encontrado.\n");
+  } else {
+      printf("El archivo no pudo abrirse.\n");
+  }
+
+  fclose(archivo);
+}
+
+void mostrarDatos(char productos[][COLUMNAS], float precio[], int cantidadProductos[]){
+  if ((archivo = fopen("inventario.txt", "r")) != NULL){
+    char productos[50];
+    int cantidadProducto;
+    float precioProducto;
+    rewind(archivo);
+    while(fscanf(archivo, "%s %d %f", productos, &cantidadProducto, &precioProducto) == 3){
+      printf("Producto: %s\n", productos);
+      printf("Cantidad: %d\n", cantidadProducto);
+      printf("Precio: %.2f\n\n", precioProducto);
+    }
+    fclose (archivo);
+  }else{
+    printf("El archivo no pudo abrirse");
+  }
+}
+
+int menu(){
+  int op;
+  printf("1.-Ingresar productos\n");
+  printf("2.-Editar productos.\n");
+  printf("3.-Mostrar.\n");
+  printf("4.-Salir\n");
+  scanf("%d", &op);
+  return op;
+}
